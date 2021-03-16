@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import datetime
 import time
-
+ 
 
 def btncmd():
   lms_id = id_e.get()
@@ -15,8 +15,12 @@ def btncmd():
 
   URL = "https://myclass.ssu.ac.kr/login.php"
 
+  chrome_options = webdriver.ChromeOptions()
+  if(c1var.get() == 1):
+    chrome_options.add_argument("--mute-audio")
+
   path = chromedriver_autoinstaller.install(cwd=True)
-  browser = webdriver.Chrome(path)
+  browser = webdriver.Chrome(executable_path = path, chrome_options=chrome_options)
   browser.get(URL)
 
   def login(lms_id, lms_pw):
@@ -108,7 +112,8 @@ def btncmd():
             todo_list.append(td[1].find('a')['href'][-6:])
 
   for video_id in todo_list:
-    video_url = "http://myclass.ssu.ac.kr/mod/xncommons/viewer.php?id=" + video_id
+    video_url_format = "http://myclass.ssu.ac.kr/mod/xncommons/viewer.php?id="
+    video_url = video_url_format  + video_id
     browser.execute_script(f"window.open('{video_url}');")
     video_tab = browser.window_handles[-1]
     browser.switch_to.window(video_tab)
@@ -139,9 +144,17 @@ def btncmd():
       write_log(video_name, video_url)
       browser.switch_to.window(browser.window_handles[0])
     except:
-      continue
+      num_tap = len(browser.window_handles)
+
+      if(num_tap > 1):
+        for i in reversed(range(num_tap)):
+          browser.switch_to.window(browser.window_handles[i])
+          if(video_url_format in browser.current_url):
+            browser.close()
+           
 
   browser.quit()
+
 
 root = Tk()
 root.title("LMS Player")
@@ -152,12 +165,16 @@ root.resizable(False, False)
 id_e = Entry(root, width = 30)
 pw_e = Entry(root, width = 30)
 btn = Button(root, text="실행", command = btncmd)
+c1var = IntVar()
+c1 = Checkbutton(root, text='음소거', variable = c1var)
+c1.select()
 
 id_e.insert(0, "학번을 입력하세요")
 pw_e.insert(0, "비밀번호를 입력하세요")
 
 id_e.pack()
 pw_e.pack()
+c1.pack()
 btn.pack()
 
 root.mainloop()
