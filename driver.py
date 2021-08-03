@@ -14,12 +14,9 @@ from selenium.webdriver.common.keys import Keys
 class driver():
 # 	def_생성자(id, pw, video_id_list ) :
 # 		m_id = id, m_pw = pw, 스캠_url
-	def __init__(self, id, pw):
-		m_id = id
-		m_pw = pw
-
-		url = "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https://myclass.ssu.ac.kr/sso/login.php"
-
+	def __init__(self):
+		self.driver = webdriver.Chrome()
+		
 
 # 	def_로그인(self,) :
 # 		아이디 창 객체 저장
@@ -29,16 +26,18 @@ class driver():
 # 		아이디창에 m_id 넣기
 # 		비번창에 m_pw 넣기
 # 		로그인버튼 누르기  -> 오류뜸 고쳐야함
-	def login(self):
-		driver = webdriver.Chrome()
-		driver.get('url')
-		elem = driver.find_element_by_id("userid")
-		elem.send_keys('m_id')
+	def login(self, m_id, m_pw):
+		login_url = "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https://myclass.ssu.ac.kr/sso/login.php"
 
-		elem = driver.find_element_by_id("pwd")
-		elem.send_keys('m_pw')
+		self.driver.get('url')
 
-		elem.send_keys(Keys.RETURN)
+		id_elem = driver.find_element_by_id("userid")
+		pw_elem = driver.find_element_by_id("pwd")
+
+		id_elem.send_keys(m_id)
+		pw_elem.send_keys(m_pw)
+
+		pw_elem.send_keys(Keys.RETURN) # 오류
 
 # 	def_할일 체크:
 # 		if ( video 리스트 객체 ) {
@@ -46,7 +45,7 @@ class driver():
 # } else {
 # 		출석부 읽기
 # }
-	def check_video(self):
+	def check_atd(self):
 		pass
 
 
@@ -70,7 +69,7 @@ class driver():
 # each link in links {
 # 	list <= 5 character in link 
 # }
-	def get_video_id(self):
+	def get_cource_id(self):
 		pass
 
 
