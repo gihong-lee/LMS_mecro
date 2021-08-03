@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import datetime
 import time
- 
+# 엉덩이
 
 def btncmd():
   lms_id = id_e.get()
