@@ -1,6 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-
+import time
 # driver = webdriver.Chrome()
 # driver.get("http://www.python.org")
 # # assert "Python" in driver.title
@@ -11,7 +11,7 @@ from selenium.webdriver.common.keys import Keys
 # # assert "No results found." not in driver.page_source
 # # driver.close()
 
-class driver():
+class driver:
 # 	def_생성자(id, pw, video_id_list ) :
 # 		m_id = id, m_pw = pw, 스캠_url
 	def __init__(self):
@@ -29,24 +29,15 @@ class driver():
 	def login(self, m_id, m_pw):
 		login_url = "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https://myclass.ssu.ac.kr/sso/login.php"
 
-		self.driver.get('url')
+		self.driver.get(login_url)
 
-		id_elem = driver.find_element_by_id("userid")
-		pw_elem = driver.find_element_by_id("pwd")
+		id_elem = self.driver.find_element_by_id("userid")
+		pw_elem = self.driver.find_element_by_id("pwd")
 
 		id_elem.send_keys(m_id)
 		pw_elem.send_keys(m_pw)
 
-		pw_elem.send_keys(Keys.RETURN) # 오류
-
-# 	def_할일 체크:
-# 		if ( video 리스트 객체 ) {
-# 동영상 재생
-# } else {
-# 		출석부 읽기
-# }
-	def check_atd(self):
-		pass
+		self.driver.find_element_by_class_name('btn_login').click()
 
 
 # def_출석부 읽기:
@@ -57,9 +48,29 @@ class driver():
 			
 # video_id 추출()
 # 			}
-	def read_video_id(self):
-		pass
+	def get_cource_id(self):
+		self.driver.get("http://myclass.ssu.ac.kr/local/ubion/user/?year=2021&semester=10")
+		time.sleep(1)
 
+		cources = []
+		crt_url = ""
+
+		for i in range(9):
+			self.driver.find_elements_by_css_selector('.coursefullname')[i].click()
+			time.sleep(1)
+			crt_url = self.driver.current_url
+			cources.append(crt_url[-5:])
+			self.driver.back()
+
+
+# 	def_할일 체크:
+# 		if ( video 리스트 객체 ) {
+# 동영상 재생
+# } else {
+# 		출석부 읽기
+# }
+	def check_atd(self):
+		pass
 
 # 	def_강의 ID 추출:
 # soup = smart_camp의 첫 페이지의 html
@@ -69,13 +80,13 @@ class driver():
 # each link in links {
 # 	list <= 5 character in link 
 # }
-	def get_cource_id(self):
+	def get_video_id(self):
 		pass
 
 
 # def_주차 알아내기 : 
 # 	return  ( week of present ) - ( week of 2021.09.01 )
-	def week(self):
+	def get_week(self):
 		pass
 
 # def_ video_id 추출 : 
@@ -92,7 +103,7 @@ class driver():
 
 # def_미출석video 판단 :  ->bool
 # 	if( 출석 != ‘o’ ) return true
-	def attendance(self):
+	def jud_atd(self):
 		pass
 
 # def_동영상재생 :
@@ -110,11 +121,14 @@ class driver():
 # 		return start_time
 # 	}
 # 	else return 0
-	def pre_time(self):
+	def prt_time(self):
 		pass
 
 
 # def_수강시간만큼 동영상 재생:
 # 	동영상재생 함수에 따라 바뀜
-	def time_play(self):
+	def play_for_time(self):
 		pass
+
+driver()
+time.sleep(5)
