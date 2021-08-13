@@ -13,7 +13,6 @@ from selenium.webdriver.support import expected_conditions as EC
 class driver:
 	def __init__(self):
 		self.driver = webdriver.Chrome()
-		self.driver.quit()
 
 	def is_running(self) -> bool:
 		try:
@@ -25,7 +24,7 @@ class driver:
 	def isin(self, name, ctt_list):
 		for ctt in ctt_list:
 			if(ctt == name):
-    				return True
+				return True
 
 	def get_start_time(self):
 		time.sleep(10)
@@ -184,4 +183,3 @@ if __name__ =="__main__":
 	a.get_cource_id()
 	a.get_none_atd()
 	a.play_video()
-
