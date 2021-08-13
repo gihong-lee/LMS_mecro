@@ -8,8 +8,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 class driver:
-#   def_생성자(id, pw, video_id_list ) :
-# 		m_id = id, m_pw = pw, 스캠_url
   def __init__(self, v_list : list):
     path = chromedriver_autoinstaller.install(cwd=True)
     self.driver = webdriver.Chrome(executable_path = path)
@@ -18,14 +16,6 @@ class driver:
     URL = "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https://myclass.ssu.ac.kr/sso/login.php"
     self.driver.get(URL)
 
-# 	def_로그인(self,) :
-# 		아이디 창 객체 저장
-# 		비번 창 객체 저장
-# 		로그인 버튼 객체 저장
-#  //
-# 		아이디창에 m_id 넣기
-# 		비번창에 m_pw 넣기
-# 		로그인버튼 누르기  -> 오류뜸 고쳐야함
   def login(self, id : str, pw : str): 
     IDinput = self.driver.find_element_by_xpath('//*[@id="userid"]')
     PWinput = self.driver.find_element_by_xpath('//*[@id="pwd"]')
@@ -34,29 +24,12 @@ class driver:
     PWinput.send_keys(pw)
     self.driver.execute_script("LoginInfoSend('LoginInfo')")
 
-
-# 	def_할일 체크:
-# 		if ( video 리스트 객체 ) {
-#        동영상 재생
-#      } else {
-# 		    출석부 읽기
-#      }
   def check_todo(self):
     if not(self.v_list):
       self.get_atd_list()
 
     self.pp()
     
-
-
-# def_출석부 읽기:
-# cource_id_list = 강의 ID 추출()
-# //
-# 		each cource_id in cource_id_list  {
-# 		  	출석부 url + cource_id 접근
-#         미출석 video 추출()
-#         video_id 추출()
-# 			}
   def get_atd_list(self):
     cource_id_list = self.get_cource_id()
 
@@ -64,15 +37,6 @@ class driver:
       undone_video_names = self.get_undone_video_names(cource_id)
       self.get_video_id(cource_id, undone_video_names)
 
-
-# 	def_강의 ID 추출:
-# soup = smart_camp의 첫 페이지의 html
-
-# links = find all of ( class == cource_link ) in soup 
-
-# each link in links {
-# 	list <= 5 character in link 
-# }
   def get_cource_id(self) -> list:
     self.driver.get("http://myclass.ssu.ac.kr/")
     cource_soup = BS(self.driver.page_source, "html.parser")
@@ -84,25 +48,11 @@ class driver:
 
     return cource_id_list
 
-
-# def_주차 알아내기 : 
-# 	return  ( week of present ) - ( week of 2021.09.01 )
   def get_week_num(self) -> int:
     y = datetime.datetime(2021,9,1)
     x = datetime.datetime.now()
 
     return int(x.strftime("%U")) - int(y.strftime("%U"))
-
-
-# def_ video_id 추출 : 
-# 		week_num = 주차알아내기()
-# 		soup = 출석부의 html
-# 		attendance_list = find all of ( tagname = “tr” ) in ( tagname = “tbody” )
-# //
-# 		each attendance in attendance_list {
-# 		       if ( week of attendance == week_num & 미출석video 판단(attendance) ) {
-# 				video_id_list <= video_id in attendance 
-# 		       }
 
   def get_undone_video_names(self, cource_id: str) -> list:
     atd_base_url = "http://myclass.ssu.ac.kr/report/ubcompletion/user_progress_a.php?id="
@@ -133,7 +83,6 @@ class driver:
     else:
       return
 
-
   def get_video_id(self, cource_id: str, undone_video_names: list):
     if undone_video_names:
       videos_base_url = "http://myclass.ssu.ac.kr/mod/xncommons/index.php?id="
@@ -155,10 +104,6 @@ class driver:
             if word in undone_video_names:
               self.v_list.append(td[1].find('a')['href'][-6:])
 
-# def_동영상재생 :
-# 	구현방법 논의 할 것
-# 현재 : 수강시간 계산후 그 만큼 sleep
-# 방안1 : 현재 동영상 재생시간을 받아 계산시간 보다 크면 success
   def pp(self):
     self.sleep(0.5)
 
@@ -182,15 +127,7 @@ class driver:
       self.close_video_tab(video_tab)
       self.v_list.remove(v_id)
 
-# def_시작시간 받아오기:
-# 	alert_win_obj = alert window of driver
-# //
-# 	if ( exit alert_win_obj ) {
-# 			start_time = start time of alert_win_obj
-# 		return start_time
-# 	}
-# 	else return 0
-  def get_start_time(self):
+  def get_start_time(self) -> int:
     try:
       WebDriverWait(self.driver, 10).until(EC.alert_is_present())
       alert = self.driver.switch_to.alert
@@ -203,8 +140,6 @@ class driver:
     except:
       return 0
 
-# def_수강시간만큼 동영상 재생:
-# 	동영상재생 함수에 따라 바뀜
   def play_video(self):
     playbtn = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="front-screen"]/div/div[2]/div[1]/div')))
     playbtn.click()
@@ -240,7 +175,6 @@ class driver:
       return True
    except:
       return False
-
   
   def get_video_info(self) -> dict:
     video_info  = {}

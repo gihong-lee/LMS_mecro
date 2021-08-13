@@ -9,16 +9,19 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.command import Command
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import chromedriver_autoinstaller
 
 class driver:
 	def __init__(self):
-		self.driver = webdriver.Chrome()
+		path = chromedriver_autoinstaller.install(cwd=True)
+		self.driver = webdriver.Chrome(executable_path = path)
+		self.todo_list = []
 
 	def is_running(self) -> bool:
 		try:
 			self.driver.execute(Command.STATUS)
 			return True
-		except (socket.error, httplib.CannotSendRequest):
+		except:
 			return False
 
 	def isin(self, name, ctt_list):
@@ -76,7 +79,6 @@ class driver:
 
 	def get_none_atd(self):		
 		for cource_id in self.cources:
-			time.sleep(1)
 			self.jud_atd(cource_id)
 			self.get_video_id(cource_id)
 
@@ -99,8 +101,6 @@ class driver:
 					self.att_list.append(att_td[0].text.strip())
 
 	def get_video_id(self, cource_id:str):
-		self.todo_list = []
-
 		ctt_url = 'http://myclass.ssu.ac.kr/mod/xncommons/index.php?id=' + cource_id
 		self.driver.get(ctt_url)
 
@@ -114,13 +114,6 @@ class driver:
 				if(len(td) > 2):
 					if(self.isin(td[1].text.strip(), self.att_list)):
 						self.todo_list.append(td[1].find('a')['href'][-6:])
-
-	# def get_week(self) -> int:
-	# 	now_time = datetime.datetime.now()
-	# 	week = now_time.isocalendar()
-	# 	now_week = week[1] - 34
-
-		# return now_week
 
 	def play_video(self):
 		for id in self.todo_list:
@@ -176,9 +169,16 @@ class driver:
 					if(self.video_url_format in self.driver.current_url):
 						self.driver.close()
 
+	def quit(self):
+		self.driver.quit()
+
 if __name__ =="__main__":
-	a = driver()
-	a.login('20170619', 'lsh2055855!')
-	a.get_cource_id()
-	a.get_none_atd()
-	a.play_video()
+	driver = driver()
+	driver.login('20170619', 'lsh2055855!')
+	driver.get_cource_id()
+	driver.get_none_atd()
+	driver.play_video()
+
+	driver.quit()
+	time.sleep(2)
+

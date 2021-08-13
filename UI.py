@@ -2,6 +2,7 @@ from tkinter import *
 from selenium import webdriver
 
 import pickle
+from driver import driver
 
 class Ui:
   def __init__(self, setting: dict):
@@ -12,9 +13,6 @@ class Ui:
 
     self.info = {}
     self.isrunnig = False
-
-    # self.cheak_ruuning()
-    self.change_btn_state()
 
   def run(self):
     self.root.mainloop()
@@ -100,13 +98,22 @@ class Ui:
 
   def btncmd(self):
     self.info["id"] = self.id_e.get()
-    self.info["pw"] = self.pw_e.get()
     self.info["is_id_saved"] = self.id_save_var.get()
     self.info["is_mute"] = self.mute_var.get()
     self.info["percent_set"] = self.p_var.get()
 
+    pw = self.pw_e.get()
     print(self.info)
     self.save_options()
+
+    self.driver = driver()
+    self.driver.login(self.info["id"], pw)
+    self.driver.get_cource_id()
+    self.driver.get_none_atd()
+    self.driver.play_video()
+
+    self.cheak_ruuning()
+    self.change_btn_state()
   
   def get_info(self) -> dict: #driver에 info 전달하는 함수로 변경할듯
     return self.info
@@ -122,9 +129,8 @@ class Ui:
     self.root.after(500,self.change_btn_state)
 
   def cheak_ruuning(self):
-    #   self.isrunnig = self.driver.is_running()
-    #   self.root.after(500,self.cheak_ruuning)
-    pass
+    self.isrunnig = self.driver.is_running()
+    self.root.after(500,self.cheak_ruuning)
   
   def save_options(self): #path 수정할것 
     setting = {"id_set": None, "is_mute_set":None, "percent_set": None}
@@ -154,7 +160,7 @@ if __name__ == "__main__":
   except:
     setting = {"id_set": None, "is_mute_set":None, "percent_set": None}
 
-  print(setting)
+  # print(setting)
 
   ui = Ui(setting)
   ui.run()
