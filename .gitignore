@@ -2,3 +2,4 @@
 test/
 selenium/
 __pycache__
+test.py
