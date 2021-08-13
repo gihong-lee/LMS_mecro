@@ -7,33 +7,33 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import datetime
 import time
-# 엉덩이
+
 
 def btncmd():
   lms_id = id_e.get()
   lms_pw = pw_e.get()
 
-  URL = "https://myclass.ssu.ac.kr/login.php"
+  URL = "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https://myclass.ssu.ac.kr/sso/login.php"
+
 
   chrome_options = webdriver.ChromeOptions()
   if(c1var.get() == 1):
     chrome_options.add_argument("--mute-audio")
 
   path = chromedriver_autoinstaller.install(cwd=True)
-  browser = webdriver.Chrome(executable_path = path, chrome_options=chrome_options)
+  browser = webdriver.Chrome(executable_path = path)
   browser.get(URL)
 
   def login(lms_id, lms_pw):
     ID = lms_id
     PW = lms_pw
 
-    IDinput = browser.find_element_by_xpath('//*[@id="input-username"]')
-    PWinput = browser.find_element_by_xpath('//*[@id="input-password"]')
-    loginBtn = browser.find_element_by_xpath('//*[@id="region-main"]/div/div/div/div[3]/div[1]/div[2]/form/div[2]/input')
+    IDinput = browser.find_element_by_xpath('//*[@id="userid"]')
+    PWinput = browser.find_element_by_xpath('//*[@id="pwd"]')
 
     IDinput.send_keys(ID)
     PWinput.send_keys(PW)
-    loginBtn.click()
+    browser.execute_script("LoginInfoSend('LoginInfo')")
 
   def get_cource_id_list():
     cource_soup = BS(browser.page_source, "html.parser")
@@ -55,7 +55,7 @@ def btncmd():
   def get_start_time():
     time.sleep(10)
     try:
-      alert = browser.switch_to.alert
+      alert = browser.switch_to.alert # if else 문으로 처리 할 것!!!!
       start_time = alert.text[14:19]
       start_second = int(start_time[:2])*60 + int(start_time[-2:])
       alert.accept()
@@ -73,7 +73,7 @@ def btncmd():
   
   login(lms_id, lms_pw)
   cource_id_list = get_cource_id_list()
-
+  print(cource_id_list)
   todo_list = []
 
   for cource_id in cource_id_list:
@@ -120,6 +120,14 @@ def btncmd():
     playtime = 0
     accept_time = browser.find_element_by_xpath("//*[@id='vod_header']/h1/span").text
     video_name = browser.find_element_by_xpath('//*[@id="vod_header"]/h1').text
+
+    if(len(accept_time) == 8):
+      playtime = int(accept_time[:2])*60*60 + int(accept_time[3:5])*60 + int(accept_time[-2:])
+      video_name = video_name[:-9]
+    elif(len(accept_time) == 5):
+      playtime = int(accept_time[:2])*60 + int(accept_time[-2:])
+      video_name = video_name[:-6]
+
     try:
       iframe1 = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'iframe')))
       browser.switch_to.frame(iframe1)
@@ -128,13 +136,6 @@ def btncmd():
       playbtn = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="front-screen"]/div/div[2]/div[1]/div')))
       playbtn.click()
       start_time = get_start_time()
-      
-      if(len(accept_time) == 8):
-        playtime = int(accept_time[:2])*60*60 + int(accept_time[3:5])*60 + int(accept_time[-2:])
-        video_name = video_name[:-9]
-      elif(len(accept_time) == 5):
-        playtime = int(accept_time[:2])*60 + int(accept_time[-2:])
-        video_name = video_name[:-6]
 
       delay = playtime - start_time
       time.sleep(delay+20)

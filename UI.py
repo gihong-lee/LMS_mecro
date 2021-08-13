@@ -1,7 +1,9 @@
 from tkinter import *
 from selenium import webdriver
 
-class main:
+import pickle
+
+class Ui:
   def __init__(self, setting: dict):
     self.set_window()
     self.set_user_info_frame(setting)
@@ -24,7 +26,7 @@ class main:
     self.root.geometry("320x160")
     self.root.resizable(False, False)
     
-  def set_user_info_frame(self, setting):
+  def set_user_info_frame(self, setting: dict):
     user_info_frame = Frame(self.root)
 
     id_label = Label(user_info_frame, text = "아이디")
@@ -33,6 +35,8 @@ class main:
     self.id_e = Entry(user_info_frame, width = 30)
     self.pw_e = Entry(user_info_frame, width = 30)
 
+
+    print(setting["id_set"])
     if setting["id_set"]:
       self.id_e.insert(0, setting["id_set"])
     else:
@@ -49,7 +53,7 @@ class main:
 
     user_info_frame.pack()
 
-  def set_options_frame(self, setting):
+  def set_options_frame(self, setting: dict):
     options_frame = Frame(self.root)
     check_option_frame = Frame(options_frame)
     radio_option_frame = Frame(options_frame)
@@ -70,16 +74,12 @@ class main:
     if setting["is_mute_set"]:
       mute_ckbtn.select()
 
-
+    p_btn1.select()
     if setting["percent_set"]:
       if setting["percent_set"] == 95:
         p_btn2.select()
       elif setting["percent_set"] > 95:
         p_btn3.select()
-    else:
-      p_btn1.select()
-
-  
 
     id_save_ckbtn.pack(side=LEFT)
     mute_ckbtn.pack(side=LEFT)
@@ -106,8 +106,9 @@ class main:
     self.info["percent_set"] = self.p_var.get()
 
     print(self.info)
+    self.save_options()
   
-  def get_info(self) -> dict:
+  def get_info(self) -> dict: #driver에 info 전달하는 함수로 변경할듯
     return self.info
 
   def change_btn_state(self):
@@ -120,13 +121,40 @@ class main:
 
     self.root.after(500,self.change_btn_state)
 
-  # def cheak_ruuning(self):
-  #   self.isrunnig = self.driver.is_running()
-  #   self.root.after(500,self.cheak_ruuning)
+  def cheak_ruuning(self):
+    #   self.isrunnig = self.driver.is_running()
+    #   self.root.after(500,self.cheak_ruuning)
+    pass
+  
+  def save_options(self): #path 수정할것 
+    setting = {"id_set": None, "is_mute_set":None, "percent_set": None}
+    
+    if self.id_save_var.get():
+      setting["id_set"] = self.id_e.get()
+    setting["is_mute_set"] = self.mute_var.get()
+    setting["percent_set"] = self.p_var.get()
+
+    path = "./test/setting" #path 수정할것 
+    self.save_pickle_file(setting, path)
+
+  def save_pickle_file(self, data, path :str):    
+    data_file = open(path,"wb")
+    pickled_id = pickle.dump(data, data_file)
+    data_file.close()
 
 if __name__ == "__main__":
   v_id_list = []
-  setting = {"id_set": None, "is_mute_set":None, "percent_set": None}
+  path = "./test/setting"
 
-  ui = main(setting)
+  setting = ''
+  try:
+    data_file = open(path,"rb")
+    setting = pickle.load(data_file)
+    data_file.close()
+  except:
+    setting = {"id_set": None, "is_mute_set":None, "percent_set": None}
+
+  print(setting)
+
+  ui = Ui(setting)
   ui.run()

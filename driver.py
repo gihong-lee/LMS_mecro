@@ -80,7 +80,6 @@ class driver:
 			self.jud_atd(cource_id)
 			self.get_video_id(cource_id)
 
-
 	def jud_atd(self, cource_id: str):
 		self.att_list = []
 		

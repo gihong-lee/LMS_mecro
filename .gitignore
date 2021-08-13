@@ -1,3 +1,4 @@
 *.exe
 test/
 selenium/
+__pycache__
