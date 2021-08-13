@@ -1,31 +1,50 @@
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 import time
-# driver = webdriver.Chrome()
-# driver.get("http://www.python.org")
-# # assert "Python" in driver.title
-# # elem = driver.find_element_by_name("q")
-# # elem.clear()
-# # elem.send_keys("pycon")
-# # elem.send_keys(Keys.RETURN)
-# # assert "No results found." not in driver.page_source
-# # driver.close()
+import socket
+import datetime
+from tkinter import *
+from bs4 import BeautifulSoup
+import http.client as httplib
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.command import Command
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 class driver:
-# 	def_생성자(id, pw, video_id_list ) :
-# 		m_id = id, m_pw = pw, 스캠_url
 	def __init__(self):
 		self.driver = webdriver.Chrome()
-		
+		self.driver.quit()
 
-# 	def_로그인(self,) :
-# 		아이디 창 객체 저장
-# 		비번 창 객체 저장
-# 		로그인 버튼 객체 저장
+	def is_running(self) -> bool:
+		try:
+			self.driver.execute(Command.STATUS)
+			return True
+		except (socket.error, httplib.CannotSendRequest):
+			return False
 
-# 		아이디창에 m_id 넣기
-# 		비번창에 m_pw 넣기
-# 		로그인버튼 누르기  -> 오류뜸 고쳐야함
+	def isin(self, name, ctt_list):
+		for ctt in ctt_list:
+			if(ctt == name):
+    				return True
+
+	def get_start_time(self):
+		time.sleep(10)
+		try:
+			alert = driver.switch_to.alert
+			self.start_time = alert.text[14:19]
+			start_second = int(self.start_time[:2])*60 + int(self.start_time[-2:])
+			alert.accept()
+			return start_second
+		except:
+			return 0
+
+	def write_log(self, content, link):
+		f = open("재생 기록.txt",'at',encoding='utf8')
+		now = str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+		data = f"{now} : {content}가 매크로에 의해 재생되었습니다.\n\t {content} 링크 : {link}\n"
+		f.write(data)
+		f.close()
+
 	def login(self, m_id, m_pw):
 		login_url = "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https://myclass.ssu.ac.kr/sso/login.php"
 
@@ -38,97 +57,131 @@ class driver:
 		pw_elem.send_keys(m_pw)
 
 		self.driver.find_element_by_class_name('btn_login').click()
+		time.sleep(2)
 
-
-# def_출석부 읽기:
-# cource_id_list = 강의 ID 추출()
-
-# 		each cource_id in cource_id_list  {
-# 			출석부 url + cource_id 접근
-			
-# video_id 추출()
-# 			}
-	def get_cource_id(self):
+	def get_cource_id(self) -> list:
 		self.driver.get("http://myclass.ssu.ac.kr/local/ubion/user/?year=2021&semester=10")
 		time.sleep(1)
 
-		cources = []
-		crt_url = ""
+		self.cources = []
+		self.crt_url = ""
 
-		for i in range(9):
+		for i in range(9): # 범위 설정
 			self.driver.find_elements_by_css_selector('.coursefullname')[i].click()
 			time.sleep(1)
-			crt_url = self.driver.current_url
-			cources.append(crt_url[-5:])
+			self.crt_url = self.driver.current_url
+			self.cources.append(self.crt_url[-5:])
 			self.driver.back()
+			
+		return self.cources
+
+	def get_none_atd(self):		
+		for cource_id in self.cources:
+			time.sleep(1)
+			self.jud_atd(cource_id)
+			self.get_video_id(cource_id)
 
 
-# 	def_할일 체크:
-# 		if ( video 리스트 객체 ) {
-# 동영상 재생
-# } else {
-# 		출석부 읽기
-# }
-	def check_atd(self):
-		pass
+	def jud_atd(self, cource_id: str):
+		self.att_list = []
+		
+		att_url = "http://myclass.ssu.ac.kr/report/ubcompletion/user_progress_a.php?id="
+		self.driver.get(att_url + cource_id)
+		att_soup = BeautifulSoup(self.driver.page_source, "html.parser")
+		att_body = att_soup.find_all("tbody")[1]
+		att_tr = att_body.find_all("tr")
 
-# 	def_강의 ID 추출:
-# soup = smart_camp의 첫 페이지의 html
+		for tr in att_tr:
+			att_td = tr.find_all("td")
+			if(len(att_td) == 6):
+				if(att_td[4].text == 'X'):
+					self.att_list.append(att_td[1].text.strip())
+			elif(len(att_td) == 4):
+				if(att_td[3].text == 'X'):
+					self.att_list.append(att_td[0].text.strip())
 
-# links = find all of ( class == cource_link ) in soup 
+	def get_video_id(self, cource_id:str):
+		self.todo_list = []
 
-# each link in links {
-# 	list <= 5 character in link 
-# }
-	def get_video_id(self):
-		pass
+		ctt_url = 'http://myclass.ssu.ac.kr/mod/xncommons/index.php?id=' + cource_id
+		self.driver.get(ctt_url)
 
+		ctt_soup = BeautifulSoup(self.driver.page_source, "html.parser")
+		ctt_body = ctt_soup.find("tbody")
 
-# def_주차 알아내기 : 
-# 	return  ( week of present ) - ( week of 2021.09.01 )
-	def get_week(self):
-		pass
+		if(ctt_body):
+			ctt_tr = ctt_body.find_all('tr')
+			for tr in ctt_tr:
+				td = tr.find_all('td')
+				if(len(td) > 2):
+					if(self.isin(td[1].text.strip(), self.att_list)):
+						self.todo_list.append(td[1].find('a')['href'][-6:])
 
-# def_ video_id 추출 : 
-# 		week_num = 주차알아내기()
-# 		soup = 출석부의 html
-# 		attendance_list = find all of ( tagname = “tr” ) in ( tagname = “tbody” )
+	# def get_week(self) -> int:
+	# 	now_time = datetime.datetime.now()
+	# 	week = now_time.isocalendar()
+	# 	now_week = week[1] - 34
 
-# 		each attendance in attendance_list {
-# 		       if ( week of attendance == week_num & 미출석video 판단(attendance) ) {
-# 				video_id_list <= video_id in attendance 
-# 		       }
-	def get_video_id(self):
-		pass
+		# return now_week
 
-# def_미출석video 판단 :  ->bool
-# 	if( 출석 != ‘o’ ) return true
-	def jud_atd(self):
-		pass
-
-# def_동영상재생 :
-# 	구현방법 논의 할 것
-# 현재 : 수강시간 계산후 그 만큼 sleep
-# 방안1 : 현재 동영상 재생시간을 받아 계산시간 보다 크면 success
 	def play_video(self):
-		pass
+		for id in self.todo_list:
+			self.open_tap_for_video(id)
+			self.play_for_time()
+		self.driver.quit()
 
-# def_시작시간 받아오기:
-# 	alert_win_obj = alert window of driver
+	def open_tap_for_video(self, video_id: str):
+		self.video_url_format = "http://myclass.ssu.ac.kr/mod/xncommons/viewer.php?id="
+		self.video_url = self.video_url_format  + video_id
+		self.driver.execute_script(f"window.open('{self.video_url}');")
+		self.video_tab = self.driver.window_handles[-1]
+		self.driver.switch_to.window(self.video_tab)
+		self.playtime = 0
+		self.accept_time = self.driver.find_element_by_xpath("//*[@id='vod_header']/h1/span").text
+		self.video_name = self.driver.find_element_by_xpath('//*[@id="vod_header"]/h1').text
 
-# 	if ( exit alert_win_obj ) {
-# 			start_time = start time of alert_win_obj
-# 		return start_time
-# 	}
-# 	else return 0
-	def prt_time(self):
-		pass
+		print(self.accept_time, self.video_name)
 
+	def get_time(self):
+		if(len(self.accept_time) == 8):
+			self.playtime = int(self.accept_time[:2])*60*60 + int(self.accept_time[3:5])*60 + int(self.accept_time[-2:])
+			self.video_name = self.video_name[:-9]
+		elif(len(self.accept_time) == 5):
+			self.playtime = int(self.accept_time[:2])*60 + int(self.accept_time[-2:])
+			self.video_name = self.video_name[:-6]
+  
+	def press_play_btn(self):
+		iframe1 = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'iframe')))
+		self.driver.switch_to.frame(iframe1)
+		iframe2 = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'iframe')))
+		self.driver.switch_to.frame(iframe2)
+		playbtn = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="front-screen"]/div/div[2]/div[1]/div')))
+		playbtn.click()
+		self.start_time = self.get_start_time()
 
-# def_수강시간만큼 동영상 재생:
-# 	동영상재생 함수에 따라 바뀜
 	def play_for_time(self):
-		pass
+		try:
+			self.press_play_btn()
+			self.get_time()
+			delay = self.playtime - self.start_time
+			time.sleep(delay+20)
+			self.driver.switch_to.window(self.video_tab)
+			self.driver.close()
+			self.write_log(self.video_name, self.video_url)
+			self.driver.switch_to.window(self.driver.window_handles[0])
+		except:
+			num_tap = len(self.driver.window_handles)
 
-driver()
-time.sleep(5)
+			if(num_tap > 1):
+				for i in reversed(range(num_tap)):
+					self.driver.switch_to.window(self.driver.window_handles[i])
+					if(self.video_url_format in self.driver.current_url):
+						self.driver.close()
+
+if __name__ =="__main__":
+	a = driver()
+	a.login('20170619', 'lsh2055855!')
+	a.get_cource_id()
+	a.get_none_atd()
+	a.play_video()
+
