@@ -108,7 +108,7 @@ class Ui:
 
     self.driver = driver()
     self.driver.login(self.info["id"], pw)
-    self.driver.get_cource_id()
+    self.driver.t_get_cource_id()
     self.driver.get_none_atd()
     self.driver.play_video()
 

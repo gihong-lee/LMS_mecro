@@ -8,6 +8,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 class driver:
+#   def_생성자(id, pw, video_id_list ) :
+# 		m_id = id, m_pw = pw, 스캠_url
   def __init__(self, v_list : list):
     path = chromedriver_autoinstaller.install(cwd=True)
     self.driver = webdriver.Chrome(executable_path = path)
@@ -82,6 +84,7 @@ class driver:
       return atd_list
     else:
       return
+
 
   def get_video_id(self, cource_id: str, undone_video_names: list):
     if undone_video_names:
@@ -175,6 +178,7 @@ class driver:
       return True
    except:
       return False
+
   
   def get_video_info(self) -> dict:
     video_info  = {}
