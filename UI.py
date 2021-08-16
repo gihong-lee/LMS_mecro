@@ -1,15 +1,17 @@
 from tkinter import *
 from selenium import webdriver
-
 import pickle
+import threading
+
 from driver import driver
 
 class Ui:
-  def __init__(self, setting: dict):
+  def __init__(self, setting: dict, v_list : list):
     self.set_window()
     self.set_user_info_frame(setting)
     self.set_options_frame(setting)
     self.set_btn()
+    self.v_list = v_list
 
     self.info = {}
     self.isrunnig = False
@@ -90,7 +92,7 @@ class Ui:
     options_frame.pack()
 
   def set_btn(self):
-    self.btn = Button(self.root, text="실행", command = self.btncmd)
+    self.btn = Button(self.root, text="실행", command = threading.Thread(target=self.btncmd).start)
     self.btn.pack()
 
   def handle_click(self, event):
@@ -103,17 +105,18 @@ class Ui:
     self.info["percent_set"] = self.p_var.get()
 
     pw = self.pw_e.get()
-    print(self.info)
     self.save_options()
 
     self.driver = driver()
-    self.driver.login(self.info["id"], pw)
-    self.driver.t_get_cource_id()
-    self.driver.get_none_atd()
-    self.driver.play_video()
-
     self.cheak_ruuning()
-    self.change_btn_state()
+
+    self.driver.login(self.info["id"], pw)
+    cources = self.driver.t_c_id()
+    # cources = self.driver.get_cource_id()
+    self.driver.get_none_atd(cources)
+    self.driver.pp(self.info["percent_set"])
+
+    # self.check_todo()
   
   def get_info(self) -> dict: #driver에 info 전달하는 함수로 변경할듯
     return self.info
@@ -126,11 +129,12 @@ class Ui:
       self.btn['state'] = NORMAL
       self.btn['text'] = "실행"
 
-    self.root.after(500,self.change_btn_state)
+    self.root.after(500,self.cheak_ruuning)
 
   def cheak_ruuning(self):
-    self.isrunnig = self.driver.is_running()
-    self.root.after(500,self.cheak_ruuning)
+    self.isrunnig = self.driver.is_running
+    self.root.after(500,self.change_btn_state)
+
   
   def save_options(self): #path 수정할것 
     setting = {"id_set": None, "is_mute_set":None, "percent_set": None}
@@ -148,6 +152,21 @@ class Ui:
     pickled_id = pickle.dump(data, data_file)
     data_file.close()
 
+  def check_todo(self):
+    if not self.v_list:
+      self.get_atd_list()
+
+    # self.pp(self.v_list)
+
+  def get_atd_list(self):
+    cource_id_list = self.driver.get_cource_id()
+
+    for cource_id in cource_id_list:
+      undone_video_names = self.driver.get_undone_video_names(cource_id)
+      self.v_list = self.driver.get_video_id(cource_id, undone_video_names)
+
+    print(self.v_list)
+
 if __name__ == "__main__":
   v_id_list = []
   path = "./test/setting"
@@ -162,5 +181,5 @@ if __name__ == "__main__":
 
   # print(setting)
 
-  ui = Ui(setting)
+  ui = Ui(setting,v_id_list)
   ui.run()
