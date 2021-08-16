@@ -1,15 +1,13 @@
 import time
-import socket
 import datetime
 from tkinter import *
 from bs4 import BeautifulSoup
-import http.client as httplib
 from selenium import webdriver
+import chromedriver_autoinstaller
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.command import Command
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import chromedriver_autoinstaller
 
 class driver:
 	def __init__(self):
@@ -69,8 +67,6 @@ class driver:
 		cources = []
 		for cource in cource_list:
 			cources.append(cource['href'][-5:])
-
-		print(cources)
 		return cources
 
 	# def t_get_cource_id(self) -> list:
@@ -88,10 +84,10 @@ class driver:
 	# 		self.driver.back()
 	# 	return cources
 
-	def get_none_atd(self, cources):		
+	def get_none_atd(self, cources):
 		for cource_id in cources:
-			self.jud_atd(cource_id)
-			self.get_video_id(cource_id)
+			att_list = self.jud_atd(cource_id)
+			self.get_video_id(cource_id, att_list)
 
 	def jud_atd(self, cource_id: str) -> list:
 		att_list = []
@@ -130,7 +126,7 @@ class driver:
 	def play_video(self):
 		for id in self.todo_list:
 			self.open_tap_for_video(id)
-			self.play_for_time()
+			self.play_for_time(id)
 		self.driver.quit()
 
 	def open_tap_for_video(self, video_id: str): # 분할
@@ -140,19 +136,23 @@ class driver:
 		video_tab = self.driver.window_handles[-1]
 		self.driver.switch_to.window(video_tab)
 
-		return video_tab, video_url, video_url_format
-
-	def get_time(self, video_name):
-		playtime = 0
+	def get_video_name(self):
 		accept_time = self.driver.find_element_by_xpath("//*[@id='vod_header']/h1/span").text
 		video_name = self.driver.find_element_by_xpath('//*[@id="vod_header"]/h1').text
 		if(len(accept_time) == 8):
-			playtime = int(accept_time[:2])*60*60 + int(accept_time[3:5])*60 + int(accept_time[-2:])
 			video_name = video_name[:-9]
 		elif(len(accept_time) == 5):
-			playtime = int(accept_time[:2])*60 + int(accept_time[-2:])
 			video_name = video_name[:-6]
-		return video_name, playtime
+		return video_name
+
+	def get_play_time(self):
+		playtime = 0
+		accept_time = self.driver.find_element_by_xpath("//*[@id='vod_header']/h1/span").text
+		if(len(accept_time) == 8):
+			playtime = int(accept_time[:2])*60*60 + int(accept_time[3:5])*60 + int(accept_time[-2:])
+		elif(len(accept_time) == 5):
+			playtime = int(accept_time[:2])*60 + int(accept_time[-2:])
+		return playtime
 
 	def press_play_btn(self):
 		iframe1 = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'iframe')))
@@ -164,23 +164,28 @@ class driver:
 		start_time = self.get_start_time()
 		return start_time
 
-	def play_for_time(self, video_url, video_tab, playtime, video_name, start_time, video_url_format):
+	def play_for_time(self, video_id):
 		try:
-			self.get_time()
-			self.press_play_btn()
-			delay = playtime - start_time
+			video_name = self.get_video_name()
+			play_time = self.get_play_time()
+			start_time = self.press_play_btn()
+			delay = play_time - start_time
 			time.sleep(delay+20)
+			video_url_format = "http://myclass.ssu.ac.kr/mod/xncommons/viewer.php?id="
+			video_tab = self.driver.window_handles[-1]
+			video_url = video_url_format  + video_id
 			self.driver.switch_to.window(video_tab)
 			self.driver.close()
 			self.write_log(video_name, video_url)
 			self.driver.switch_to.window(self.driver.window_handles[0])
 		except:
-			num_tap = len(self.driver.window_handles)
-			if(num_tap > 1):
-				for i in reversed(range(num_tap)):
-					self.driver.switch_to.window(self.driver.window_handles[i])
-					if(video_url_format in self.driver.current_url):
-						self.driver.close()
+			pass
+			# num_tap = len(self.driver.window_handles)
+			# if(num_tap > 1):
+			# 	for i in reversed(range(num_tap)):
+			# 		self.driver.switch_to.window(self.driver.window_handles[i])
+			# 		if(video_url_format in self.driver.current_url):
+			# 			self.driver.close()
 
 	def	quit(self):
 		self.driver.quit()
@@ -189,8 +194,8 @@ class driver:
 if __name__ =="__main__":
 	driver = driver()
 	driver.login('20170619', 'lsh2055855!')
-	driver.t_get_cource_id()
-	driver.get_none_atd()
+	cources = driver.t_get_cource_id()
+	driver.get_none_atd(cources)
 	driver.play_video()
 
 	driver.quit()
