@@ -8,11 +8,18 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 class driver:
-	def __init__(self):
-		path = chromedriver_autoinstaller.install(cwd=True)
-		self.driver = webdriver.Chrome(executable_path = path)
-		self.todo_list = []
+	def __init__(self, options:dict, todo_list:list = []):
+		self.todo_list = todo_list
 		self.is_running = True
+
+		path = chromedriver_autoinstaller.install(cwd=True)
+		chrome_options = webdriver.ChromeOptions()
+		chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
+
+		if options["is_mute"]:
+			chrome_options.add_argument("--mute-audio")
+
+		self.driver = webdriver.Chrome(executable_path = path, chrome_options=chrome_options)
 
 	def revive_driver(self):
 		path = chromedriver_autoinstaller.install(cwd=True)
@@ -60,10 +67,13 @@ class driver:
 		return cource_id_list
 
 	def get_none_atd(self, cources):
-		for cource_id in cources:
-			atd_list = self.get_undone_video_names(cource_id)
-			self.get_video_id(cource_id, atd_list)
-			self.sleep(0.5)
+		try:
+			for cource_id in cources:
+				atd_list = self.get_undone_video_names(cource_id)
+				self.get_video_id(cource_id, atd_list)
+				self.sleep(0.5)
+		except:
+			self.is_running = False
 
 	def get_undone_video_names(self, cource_id: str) -> list:
 		atd_list = []
@@ -216,7 +226,8 @@ class driver:
 
 
 if __name__ =="__main__":
-	driver = driver()
+	options = {"is_mute": False}
+	driver = driver(options)
 	driver.login('20170619', 'lsh2055855!')
 	cources = driver.t_c_id()
 	# cources = driver.get_cource_id()
