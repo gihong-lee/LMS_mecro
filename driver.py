@@ -137,6 +137,7 @@ class driver:
 		for video_id in video_list:
 			try:
 				self.play_video(video_id, percent)
+				self.todo_list.remove(video_id)
 			except:
 				# 에러 로그 작성
 				print("오류")
@@ -164,6 +165,8 @@ class driver:
 			return 0
 
 	def play_video(self ,v_id: str, percent:int):
+		self.is_running = True
+
 		video_base_url = "http://myclass.ssu.ac.kr/mod/xncommons/viewer.php?id="
 		self.driver.execute_script(f"window.open('{video_base_url + v_id}');")
 		video_tab = self.driver.window_handles[-1]
@@ -177,7 +180,7 @@ class driver:
 
 		self.sleep(playtime)
 		self.close_video_tab(video_tab)
-		self.todo_list.remove(v_id)
+		
 
 	def get_playtime(self,playtime: int ,percent:int) -> int:
 		start_time = self.get_start_time()
