@@ -147,7 +147,7 @@ class Ui:
     self.save_pickle_file(setting, path)
 
   def save_ud_vid(self):
-    path = "./setting/ud_vids" #path 수정할것 
+    path = f"./setting/{self.id_e.get()}" #path 수정할것 
     self.save_pickle_file(self.v_list, path)
 
   def save_pickle_file(self, data, path :str):    
