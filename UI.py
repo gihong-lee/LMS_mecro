@@ -6,12 +6,12 @@ import threading
 from driver import driver
 
 class Ui:
-  def __init__(self, setting: dict, v_list : list):
+  def __init__(self, setting: dict):
     self.set_window()
     self.set_user_info_frame(setting)
     self.set_options_frame(setting)
     self.set_btn()
-    self.v_list = v_list
+    self.v_list = []
 
     self.info = {}
     self.isrunnig = False
@@ -35,8 +35,6 @@ class Ui:
     self.id_e = Entry(user_info_frame, width = 30)
     self.pw_e = Entry(user_info_frame, width = 30)
 
-
-    print(setting["id_set"])
     if setting["id_set"]:
       self.id_e.insert(0, setting["id_set"])
     else:
@@ -92,50 +90,51 @@ class Ui:
     options_frame.pack()
 
   def set_btn(self):
-    self.btn = Button(self.root, text="실행", command = threading.Thread(target=self.btncmd).start)
+    self.btn = Button(self.root, text="실행", command =lambda: [threading.Thread(target=self.btncmd).start()])
     self.btn.pack()
 
   def handle_click(self, event):
     event.widget.delete(0, "end")
 
   def btncmd(self):
-    self.info["id"] = self.id_e.get()
-    self.info["is_id_saved"] = self.id_save_var.get()
-    self.info["is_mute"] = self.mute_var.get()
-    self.info["percent_set"] = self.p_var.get()
-
-    pw = self.pw_e.get()
+    self.v_list = self.read_v_list()
     self.save_options()
+    self.play_driver()
 
-    self.driver = driver()
+  def play_driver(self):
+    driver_options = {}
+    driver_options["is_mute"] = self.mute_var.get()
+
+    self.driver = driver(driver_options, self.v_list)
     self.cheak_ruuning()
 
-    self.driver.login(self.info["id"], pw)
-    cources = self.driver.t_c_id()
-    # cources = self.driver.get_cource_id()
-    self.driver.get_none_atd(cources)
-    self.driver.pp(self.info["percent_set"])
+    pw = self.pw_e.get()
+    id = self.id_e.get()
+    percent = self.p_var.get()
 
-    # self.check_todo()
-  
-  def get_info(self) -> dict: #driver에 info 전달하는 함수로 변경할듯
-    return self.info
+    self.driver.login(id, pw)
+
+    if not self.v_list:
+      cources = self.driver.t_c_id()
+      # cources = self.driver.get_cource_id()
+      self.driver.get_none_atd(cources)
+    self.driver.pp(percent)
 
   def change_btn_state(self):
     if self.isrunnig:
       self.btn['state'] = DISABLED
       self.btn['text'] = "실행 중"
+      self.root.after(500,self.cheak_ruuning)
     else:
       self.btn['state'] = NORMAL
       self.btn['text'] = "실행"
-
-    self.root.after(500,self.cheak_ruuning)
+      self.save_ud_vid()
+      return
 
   def cheak_ruuning(self):
     self.isrunnig = self.driver.is_running
     self.root.after(500,self.change_btn_state)
 
-  
   def save_options(self): #path 수정할것 
     setting = {"id_set": None, "is_mute_set":None, "percent_set": None}
     
@@ -144,42 +143,47 @@ class Ui:
     setting["is_mute_set"] = self.mute_var.get()
     setting["percent_set"] = self.p_var.get()
 
-    path = "./test/setting" #path 수정할것 
+    path = "./setting/setting" #path 수정할것 
     self.save_pickle_file(setting, path)
+
+  def save_ud_vid(self):
+    path = "./setting/ud_vids" #path 수정할것 
+    self.save_pickle_file(self.v_list, path)
 
   def save_pickle_file(self, data, path :str):    
     data_file = open(path,"wb")
     pickled_id = pickle.dump(data, data_file)
     data_file.close()
+  
+  def read_v_list(self) -> list:
+    path = f"./setting/{self.id_e.get()}"
+    v_list = []
 
-  def check_todo(self):
-    if not self.v_list:
-      self.get_atd_list()
+    try:
+      data_file = open(path,"rb")
+      v_list = pickle.load(data_file)
+      data_file.close()
+    except:
+      pass
 
-    # self.pp(self.v_list)
+    return v_list
 
-  def get_atd_list(self):
-    cource_id_list = self.driver.get_cource_id()
+def read_file(path: str):
+  data_file = open(path,"rb")
+  data = pickle.load(data_file)
+  data_file.close()
 
-    for cource_id in cource_id_list:
-      undone_video_names = self.driver.get_undone_video_names(cource_id)
-      self.v_list = self.driver.get_video_id(cource_id, undone_video_names)
-
-    print(self.v_list)
+  return data
 
 if __name__ == "__main__":
-  v_id_list = []
-  path = "./test/setting"
-
   setting = ''
+
   try:
-    data_file = open(path,"rb")
-    setting = pickle.load(data_file)
-    data_file.close()
+    setting = read_file("./setting/setting")
   except:
     setting = {"id_set": None, "is_mute_set":None, "percent_set": None}
 
-  # print(setting)
+  print(setting)
 
-  ui = Ui(setting,v_id_list)
+  ui = Ui(setting)
   ui.run()
