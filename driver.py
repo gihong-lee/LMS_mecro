@@ -32,18 +32,30 @@ class driver:
 		f.write(data)
 		f.close()
 
+	def accept_alert(self):
+		try:
+			WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+			alert = self.driver.switch_to.alert
+			alert.accept()
+		except:
+			return 
+
 	def login(self, id : str, pw : str):
-		login_url = "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https://myclass.ssu.ac.kr/sso/login.php"
+		try:
+			login_url = "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https://myclass.ssu.ac.kr/sso/login.php"
 
-		self.driver.get(login_url)
+			self.driver.get(login_url)
 
-		IDinput = self.driver.find_element_by_xpath('//*[@id="userid"]')
-		PWinput = self.driver.find_element_by_xpath('//*[@id="pwd"]')
+			IDinput = self.driver.find_element_by_xpath('//*[@id="userid"]')
+			PWinput = self.driver.find_element_by_xpath('//*[@id="pwd"]')
 
-		IDinput.send_keys(id)
-		PWinput.send_keys(pw)
-		self.driver.execute_script("LoginInfoSend('LoginInfo')")
-		self.sleep(1)
+			IDinput.send_keys(id)
+			PWinput.send_keys(pw)
+			self.driver.execute_script("LoginInfoSend('LoginInfo')")
+			self.sleep(1)
+		except:
+			self.is_running = False
+			self.driver.quit()
 
 	def t_c_id(self) ->list: 
 		self.driver.get("http://myclass.ssu.ac.kr/local/ubion/user/?year=2021&semester=10")
@@ -128,6 +140,11 @@ class driver:
 			except:
 				# 에러 로그 작성
 				print("오류")
+				video_tab = self.driver.window_handles[-1]
+				self.driver.switch_to.window(video_tab)
+
+				self.driver.close()
+				self.accept_alert()
 				continue
 
 		self.is_running = False
