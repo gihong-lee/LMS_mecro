@@ -137,7 +137,9 @@ class driver:
 		for video_id in video_list:
 			try:
 				self.play_video(video_id, percent)
-				self.todo_list.remove(video_id)
+				if self.is_running:
+					self.todo_list.remove(video_id)
+					print(video_id,"삭제됨")	
 			except:
 				# 에러 로그 작성
 				print("오류")

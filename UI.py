@@ -118,6 +118,7 @@ class Ui:
       cources = self.driver.t_c_id()
       # cources = self.driver.get_cource_id()
       self.driver.get_none_atd(cources)
+    print(self.driver.todo_list)
     self.driver.pp(percent)
 
   def change_btn_state(self):
