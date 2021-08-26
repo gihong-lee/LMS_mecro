@@ -63,7 +63,7 @@ class Driver:
 		cource_iframe = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'iframe')))
 		self.driver.switch_to.frame(cource_iframe)
 
-		self.sleep(1)
+		self.sleep(0.5)
 		cource_soup = BS(self.driver.page_source, "html.parser")
 		cource_wraps = cource_soup.find_all('div', {'class':'xn-course-container'})
 		
@@ -88,29 +88,54 @@ class Driver:
 	# 	except:
 	# 		self.is_running = False
 
-	# def get_undone_video_names(self, cource_id: str) -> list:
-	# 	atd_list = []
+	def get_week_num(self) ->int:
+		now_week = datetime.datetime.now().isocalendar()[1]
+		st_week = datetime.date(2021,9,1).isocalendar()[1]
+
+		return now_week - st_week + 1 
+
+	def cheak_week(self, atd_td) -> bool:
+		this_week = self.get_week_num()
+		week = int (atd_td[0].find("span",{"class":"section-title-wrap"}).find_all("span")[-1].text[:-2])
+
+		if week == this_week:
+			return True
+		else:
+			return False
+
+	def get_undone_video_names(self, cource_id: str) -> list:
+		atd_list = []
 		
-	# 	atd_url = "http://myclass.ssu.ac.kr/report/ubcompletion/user_progress_a.php?id="
-	# 	self.driver.get(atd_url + cource_id)
+		atd_url = f"https://canvas.ssu.ac.kr/courses/{cource_id}/external_tools/6"
+		self.driver.get(atd_url)
 
-	# 	atd_soup = BS(self.driver.page_source, "html.parser")
-	# 	atd_body = atd_soup.find_all("tbody")
+		atd_iframe = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH,'//*[@id="tool_content"]')))
+		self.driver.switch_to.frame(atd_iframe)
+		WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH,'//*[@id="xn-learn-status"]/div/div/div[2]/table/tbody')))
 
-	# 	if len(atd_body) > 1:
-	# 		atd_tr = atd_body[1].find_all("tr")
+		atd_soup = BS(self.driver.page_source, "html.parser")
+		atd_body = atd_soup.find("tbody",{'class':'xnlsmpb-table'})
+		
+		is_on = False
 
-	# 		for tr in atd_tr:
-	# 			atd_td = tr.find_all("td")
-
-	# 			if(len(atd_td) == 6):
-	# 				if(atd_td[4].text != 'O'):
-	# 					atd_list.append(atd_td[1].text.strip())
-	# 			elif(len(atd_td) == 4):
-	# 				if(atd_td[3].text != 'O'):
-	# 					atd_list.append(atd_td[0].text.strip())
+		if atd_body:
+			atd_tr = atd_body.find_all("tr")
 	
-	# 	return atd_list
+			for tr in atd_tr:
+				atd_td = tr.find_all("td")
+
+				if (len(atd_td) == 7):
+					is_on = self.cheak_week(atd_td)
+				
+				if is_on:
+					if (len(atd_td) == 7):
+						if(atd_td[3].text == "동영상" and atd_td[5].text != 'O'):
+							atd_list.append(atd_td[2].text.strip())
+					elif(len(atd_td) == 5):
+						if(atd_td[1].text == "동영상" and atd_td[3].text != 'O'):
+							atd_list.append(atd_td[0].text.strip())
+
+		return atd_list
 
 	# def get_video_id(self, cource_id:str, undone_video_names:list):
 	# 	if undone_video_names:
@@ -251,9 +276,8 @@ class Driver:
 if __name__ =="__main__":
 	options = {"is_mute": False}
 	driver = Driver(options)
-	driver.login('20170619', 'lsh2055855!')
-	driver.get_cource_id()
-	# cources = driver.t_c_id()
-	# cources = driver.get_cource_id()
+	driver.login('20170617', 'jmir4mlife!')
+	cources = driver.get_cource_id()
+	driver.get_undone_video_names(cources[1])
 	# driver.get_none_atd(cources)
 	# driver.pp(95)
